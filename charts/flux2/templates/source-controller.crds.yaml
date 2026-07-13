@@ -6,7 +6,8 @@ metadata:
     {{- with .Values.crds.annotations }}
     {{- . | toYaml | nindent 4 }}
     {{- end }}
-    controller-gen.kubebuilder.io/version: v0.19.0
+    controller-gen.kubebuilder.io/version: v0.21.0
+    kustomize.toolkit.fluxcd.io/substitute: disabled
   labels:
     app.kubernetes.io/component: source-controller
     app.kubernetes.io/instance: '{{ .Release.Namespace }}'
@@ -18,6 +19,10 @@ metadata:
 spec:
   group: source.toolkit.fluxcd.io
   names:
+    categories:
+    - all
+    - fluxcd
+    - fluxcd-sources
     kind: Bucket
     listKind: BucketList
     plural: buckets
@@ -398,7 +403,8 @@ metadata:
     {{- with .Values.crds.annotations }}
     {{- . | toYaml | nindent 4 }}
     {{- end }}
-    controller-gen.kubebuilder.io/version: v0.19.0
+    controller-gen.kubebuilder.io/version: v0.21.0
+    kustomize.toolkit.fluxcd.io/substitute: disabled
   labels:
     app.kubernetes.io/component: source-controller
     app.kubernetes.io/instance: '{{ .Release.Namespace }}'
@@ -410,9 +416,15 @@ metadata:
 spec:
   group: source.toolkit.fluxcd.io
   names:
+    categories:
+    - all
+    - fluxcd
+    - fluxcd-sources
     kind: ExternalArtifact
     listKind: ExternalArtifactList
     plural: externalartifacts
+    shortNames:
+    - ea
     singular: externalartifact
   scope: Namespaced
   versions:
@@ -599,7 +611,8 @@ metadata:
     {{- with .Values.crds.annotations }}
     {{- . | toYaml | nindent 4 }}
     {{- end }}
-    controller-gen.kubebuilder.io/version: v0.19.0
+    controller-gen.kubebuilder.io/version: v0.21.0
+    kustomize.toolkit.fluxcd.io/substitute: disabled
   labels:
     app.kubernetes.io/component: source-controller
     app.kubernetes.io/instance: '{{ .Release.Namespace }}'
@@ -611,6 +624,10 @@ metadata:
 spec:
   group: source.toolkit.fluxcd.io
   names:
+    categories:
+    - all
+    - fluxcd
+    - fluxcd-sources
     kind: GitRepository
     listKind: GitRepositoryList
     plural: gitrepositories
@@ -708,10 +725,11 @@ spec:
                 type: string
               provider:
                 description: |-
-                  Provider used for authentication, can be 'azure', 'github', 'generic'.
+                  Provider used for authentication, can be 'aws', 'azure', 'github', 'generic'.
                   When not specified, defaults to 'generic'.
                 enum:
                 - generic
+                - aws
                 - azure
                 - github
                 type: string
@@ -780,7 +798,7 @@ spec:
               serviceAccountName:
                 description: |-
                   ServiceAccountName is the name of the Kubernetes ServiceAccount used to
-                  authenticate to the GitRepository. This field is only supported for 'azure' provider.
+                  authenticate to the GitRepository. This field is only supported for 'azure' and 'aws' providers.
                 type: string
               sparseCheckout:
                 description: |-
@@ -828,7 +846,8 @@ spec:
                   secretRef:
                     description: |-
                       SecretRef specifies the Secret containing the public keys of trusted Git
-                      authors.
+                      authors. PGP public keys must be stored under keys with the .asc suffix,
+                      and SSH public keys must be stored under keys with the .sshpub suffix.
                     properties:
                       name:
                         description: Name of the referent.
@@ -845,8 +864,9 @@ spec:
             type: object
             x-kubernetes-validations:
             - message: serviceAccountName can only be set when provider is 'azure'
-              rule: '!has(self.serviceAccountName) || (has(self.provider) && self.provider
-                == ''azure'')'
+                or 'aws'
+              rule: '!has(self.serviceAccountName) || (has(self.provider) && (self.provider
+                == ''azure'' || self.provider == ''aws''))'
           status:
             default:
               observedGeneration: -1
@@ -1091,7 +1111,8 @@ metadata:
     {{- with .Values.crds.annotations }}
     {{- . | toYaml | nindent 4 }}
     {{- end }}
-    controller-gen.kubebuilder.io/version: v0.19.0
+    controller-gen.kubebuilder.io/version: v0.21.0
+    kustomize.toolkit.fluxcd.io/substitute: disabled
   labels:
     app.kubernetes.io/component: source-controller
     app.kubernetes.io/instance: '{{ .Release.Namespace }}'
@@ -1103,6 +1124,10 @@ metadata:
 spec:
   group: source.toolkit.fluxcd.io
   names:
+    categories:
+    - all
+    - fluxcd
+    - fluxcd-sources
     kind: HelmChart
     listKind: HelmChartList
     plural: helmcharts
@@ -1455,7 +1480,8 @@ metadata:
     {{- with .Values.crds.annotations }}
     {{- . | toYaml | nindent 4 }}
     {{- end }}
-    controller-gen.kubebuilder.io/version: v0.19.0
+    controller-gen.kubebuilder.io/version: v0.21.0
+    kustomize.toolkit.fluxcd.io/substitute: disabled
   labels:
     app.kubernetes.io/component: source-controller
     app.kubernetes.io/instance: '{{ .Release.Namespace }}'
@@ -1467,6 +1493,10 @@ metadata:
 spec:
   group: source.toolkit.fluxcd.io
   names:
+    categories:
+    - all
+    - fluxcd
+    - fluxcd-sources
     kind: HelmRepository
     listKind: HelmRepositoryList
     plural: helmrepositories
@@ -1786,7 +1816,8 @@ metadata:
     {{- with .Values.crds.annotations }}
     {{- . | toYaml | nindent 4 }}
     {{- end }}
-    controller-gen.kubebuilder.io/version: v0.19.0
+    controller-gen.kubebuilder.io/version: v0.21.0
+    kustomize.toolkit.fluxcd.io/substitute: disabled
   labels:
     app.kubernetes.io/component: source-controller
     app.kubernetes.io/instance: '{{ .Release.Namespace }}'
@@ -1798,6 +1829,10 @@ metadata:
 spec:
   group: source.toolkit.fluxcd.io
   names:
+    categories:
+    - all
+    - fluxcd
+    - fluxcd-sources
     kind: OCIRepository
     listKind: OCIRepositoryList
     plural: ocirepositories
@@ -2029,6 +2064,19 @@ spec:
                     description: |-
                       SecretRef specifies the Kubernetes Secret containing the
                       trusted public keys.
+                    properties:
+                      name:
+                        description: Name of the referent.
+                        type: string
+                    required:
+                    - name
+                    type: object
+                  trustedRootSecretRef:
+                    description: |-
+                      TrustedRootSecretRef specifies the Kubernetes Secret containing a
+                      Sigstore trusted_root.json file. This enables verification against
+                      self-hosted Sigstore infrastructure (custom Fulcio CA, self-hosted
+                      Rekor instance). The Secret must contain a key named "trusted_root.json".
                     properties:
                       name:
                         description: Name of the referent.
